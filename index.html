@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Problemas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.2rem;
+        }
+        
+        #problemForm {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 1rem;
+        }
+        
+        input[type="text"],
+        textarea,
+        input[type="file"] {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border 0.3s;
+            width: 100%;
+        }
+        
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        input[type="file"] {
+            padding: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        button[type="submit"] {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        button[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+        
+        a {
+            display: inline-block;
+            margin-top: 25px;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        
+        a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 640px) {
+            #problemForm {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Cadastro de Problemas</h1>
+    <form id="problemForm">
+        <div class="form-group">
+            <label for="problemName">Nome do Problema:</label>
+            <input type="text" id="problemName" required placeholder="Digite o nome do problema">
+        </div>
+        <div class="form-group">
+            <label for="problemDescription">Descrição do Problema:</label>
+            <textarea id="problemDescription" required placeholder="Descreva o problema em detalhes"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="problemImages">Imagens (opcional):</label>
+            <input type="file" id="problemImages" multiple accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="problemVideos">Vídeos (opcional):</label>
+            <input type="file" id="problemVideos" multiple accept="video/*">
+        </div>
+        <button type="submit">Cadastrar Problema</button>
+    </form>
+    <a href="description.html">Ver Problemas Cadastrados</a>
+
+    <script>
+        document.getElementById('problemForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const problemName = document.getElementById('problemName').value;
+            const problemDescription = document.getElementById('problemDescription').value;
+            const imageFiles = document.getElementById('problemImages').files;
+            const videoFiles = document.getElementById('problemVideos').files;
+            
+            const filesToBase64 = (files, callback) => {
+                const readers = [];
+                const results = [];
+                let filesLoaded = 0;
+                
+                if (files.length === 0) {
+                    callback([]);
+                    return;
+                }
+                
+                for (let i = 0; i < files.length; i++) {
+                    readers[i] = new FileReader();
+                    readers[i].onload = (event) => {
+                        results[i] = {
+                            name: files[i].name,
+                            type: files[i].type,
+                            data: event.target.result.split(',')[1]
+                        };
+                        filesLoaded++;
+                        
+                        if (filesLoaded === files.length) {
+                            callback(results);
+                        }
+                    };
+                    readers[i].readAsDataURL(files[i]);
+                }
+            };
+            
+            filesToBase64(imageFiles, (images) => {
+                filesToBase64(videoFiles, (videos) => {
+                    const problems = JSON.parse(localStorage.getItem('problems')) || [];
+                    
+                    problems.push({
+                        name: problemName,
+                        description: problemDescription,
+                        images: images,
+                        videos: videos,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    problems.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    localStorage.setItem('problems', JSON.stringify(problems));
+                    
+                    document.getElementById('problemForm').reset();
+                    alert('Problema cadastrado com sucesso!');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
