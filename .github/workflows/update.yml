@@ -4,11 +4,12 @@ on:
     types: [opened]
 
 jobs:
-  update:
+  atualizar-problemas:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        
       - name: Configurar Git
         run: |
           git config --global user.name "GitHub Actions"
@@ -17,35 +18,32 @@ jobs:
       - name: Instalar jq
         run: sudo apt-get install -y jq
 
-      - name: Processar Issue
-        id: process
+      - name: Extrair dados da issue
+        id: extrair-dados
         run: |
-          TITLE="${TITLE#Novo Problema: }"
-          DESC=$(echo "$BODY" | grep -oP '(?<=\*\*Descrição:\*\* ).*' | head -1)
-          
-          echo "title=$(echo "$TITLE" | jq -R .)" >> $GITHUB_OUTPUT
-          echo "desc=$(echo "$DESC" | jq -R .)" >> $GITHUB_OUTPUT
+          echo "titulo=$(echo '${{ github.event.issue.title }}' | sed 's/^Problema: //' | jq -R .)" >> $GITHUB_OUTPUT
+          echo "descricao=$(echo '${{ github.event.issue.body }}' | grep -oP '(?<=\*\*Descrição:\*\* ).*' | head -1 | jq -R .)" >> $GITHUB_OUTPUT
 
       - name: Atualizar JSON
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          # Baixar JSON atual
+          # Baixar problemas.json atual
           curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/tiemerson/problema_teste/contents/problemas.json" > file.json
 
           # Processar dados
-          CONTENT=$(jq -r '.content' file.json | base64 -d)
-          SHA=$(jq -r '.sha' file.json)
+          content=$(jq -r '.content' file.json | base64 -d)
+          sha=$(jq -r '.sha' file.json)
           
-          # Atualizar array
-          UPDATED=$(echo "$CONTENT" | jq \
-            --arg t "${{ steps.process.outputs.title }}" \
-            --arg d "${{ steps.process.outputs.desc }}" \
+          # Adicionar novo problema
+          updated=$(echo "$content" | jq \
+            --arg t "${{ steps.extrair-dados.outputs.titulo }}" \
+            --arg d "${{ steps.extrair-dados.outputs.descricao }}" \
             '. += [{"titulo":$t,"descricao":$d,"data":(now|todate)}]')
 
           # Commitar mudanças
-          echo "$UPDATED" > problemas.json
+          echo "$updated" > problemas.json
           git add problemas.json
-          git commit -m "Adicionar problema: ${{ steps.process.outputs.title }}"
+          git commit -m "Adicionar problema: ${{ steps.extrair-dados.outputs.titulo }}"
           git push
