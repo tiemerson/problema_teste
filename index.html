@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <style>
         #status {
-            margin: 15px 0;
+            margin: 10px 0;
             padding: 10px;
             border-radius: 4px;
             display: none;
@@ -27,7 +27,7 @@
     </div>
 
     <script>
-        async function cadastrarProblema() {
+        function cadastrarProblema() {
             const titulo = document.getElementById("problema").value.trim();
             const descricao = document.getElementById("descricao").value.trim();
             const status = document.getElementById("status");
@@ -39,36 +39,23 @@
                 return;
             }
 
-            try {
-                status.textContent = "Enviando problema...";
-                status.className = "";
-                status.style.display = "block";
-
-                const response = await fetch("https://api.github.com/repos/tiemerson/problema_teste/issues", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": "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",
-                        "Accept": "application/vnd.github.v3+json"
-                    },
-                    body: JSON.stringify({
-                        title: `Novo Problema: ${titulo}`,
-                        body: `**Descrição:** ${descricao}\n\n` +
-                              `**Data:** ${new Date().toLocaleString()}`,
-                        labels: ["problema"]
-                    })
-                });
-
-                if (!response.ok) throw new Error(await response.text());
-                
-                status.textContent = "Problema enviado! Será processado em breve.";
-                status.className = "success";
-                setTimeout(() => window.location.href = "problema.html", 2000);
-
-            } catch (error) {
-                status.textContent = `Erro: ${error.message}`;
-                status.className = "error";
-                console.error("Erro no cadastro:", error);
-            }
+            // Direciona para criação manual de issue no GitHub
+            const url = `https://github.com/SEU_USUARIO/SEU_REPOSITORIO/issues/new?` +
+                       `title=Problema: ${encodeURIComponent(titulo)}&` +
+                       `body=**Descrição:** ${encodeURIComponent(descricao)}%0A%0A**Data:** ${new Date().toLocaleString()}`;
+            
+            window.open(url, '_blank');
+            
+            status.textContent = "Complete o cadastro na página do GitHub que abriu!";
+            status.className = "success";
+            status.style.display = "block";
+            
+            // Limpa os campos após 3 segundos
+            setTimeout(() => {
+                document.getElementById("problema").value = "";
+                document.getElementById("descricao").value = "";
+                status.style.display = "none";
+            }, 3000);
         }
     </script>
 </body>
