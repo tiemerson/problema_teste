@@ -2,53 +2,25 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Cadastro Direto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Problemas</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js"></script>
     <style>
         #status {
             padding: 12px;
             margin: 15px 0;
-            display: none;
             border-radius: 6px;
+            display: none;
+            font-weight: bold;
         }
         .success { background: #e6ffed; color: #22863a; }
         .error { background: #ffebee; color: #cc0000; }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js"></script>
 </head>
 <body>
-    <script>
-    // Configuração do Firebase
-        const firebaseConfig = {
-          apiKey: "SUA_CHAVE_AQUI",
-          authDomain: "APP.firebaseapp.com",
-          databaseURL: "https://APP.firebaseio.com",
-          projectId: "APP",
-          storageBucket: "APP.appspot.com",
-          messagingSenderId: "123456789",
-          appId: "1:123456789:web:abcdef123456"
-        };
-    
-        // Inicialize o Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-    
-        async function cadastrarProblema() {
-          const titulo = document.getElementById("titulo").value;
-          const descricao = document.getElementById("descricao").value;
-          
-          // Gravação direta no Firebase
-          firebase.database().ref('problemas/').push({
-            titulo: titulo,
-            descricao: descricao,
-            data: new Date().toISOString()
-          }).then(() => {
-            alert("Problema cadastrado com sucesso!");
-            window.location.href = "problema.html";
-          });
-        }
-  </script>
     <div class="container">
         <h1>Cadastrar Problema</h1>
         <input type="text" id="titulo" placeholder="Título" required>
@@ -59,7 +31,22 @@
     </div>
 
     <script>
-        async function cadastrarProblema() {
+        // Sua configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXjpSkFfCQlvOH7jeAFYs1us4374BN3sw",
+            authDomain: "problemateste-e4bb3.firebaseapp.com",
+            databaseURL: "https://problemateste-e4bb3-default-rtdb.firebaseio.com",
+            projectId: "problemateste-e4bb3",
+            storageBucket: "problemateste-e4bb3.firebasestorage.app",
+            messagingSenderId: "150575482534",
+            appId: "1:150575482534:web:b54d509bc455604194d667"
+        };
+
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function cadastrarProblema() {
             const titulo = document.getElementById("titulo").value.trim();
             const descricao = document.getElementById("descricao").value.trim();
             const status = document.getElementById("status");
@@ -71,33 +58,25 @@
                 return;
             }
 
-            status.textContent = "Salvando...";
+            status.textContent = "Salvando problema...";
             status.className = "";
             status.style.display = "block";
 
-            try {
-                // Método alternativo via API segura
-                const response = await fetch('SEU_ENDPOINT_DE_API', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        titulo: titulo,
-                        descricao: descricao
-                    })
-                });
-
-                if (response.ok) {
-                    status.textContent = "Cadastrado com sucesso! Atualize a página.";
-                    status.className = "success";
-                } else {
-                    throw new Error("Falha na API");
-                }
-            } catch (error) {
-                status.textContent = "Erro ao cadastrar. Tente novamente.";
+            // Cadastra no Firebase
+            database.ref('problemas/').push({
+                titulo: titulo,
+                descricao: descricao,
+                data: new Date().toISOString()
+            })
+            .then(() => {
+                status.textContent = "Problema cadastrado com sucesso!";
+                status.className = "success";
+                setTimeout(() => window.location.href = "problema.html", 1500);
+            })
+            .catch((error) => {
+                status.textContent = "Erro: " + error.message;
                 status.className = "error";
-            }
+            });
         }
     </script>
 </body>
