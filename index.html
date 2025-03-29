@@ -52,10 +52,10 @@
             status.style.display = "block";
 
             try {
-                const response = await fetch('https://api.github.com/repos/SEU_USUARIO/SEU_REPOSITORIO/dispatches', {
+                const response = await fetch('https://api.github.com/repos/tiemerson/problema_teste/dispatches', {
                     method: 'POST',
                     headers: {
-                        'Authorization': 'token ghp_SEU_TOKEN_AQUI',
+                        'Authorization': 'token ghp_SEU_TOKEN_AQUI', // 👈 Substitua pelo seu token
                         'Accept': 'application/vnd.github.v3+json',
                         'Content-Type': 'application/json'
                     },
