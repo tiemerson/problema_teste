@@ -1,60 +1,51 @@
-name: Update Problems JSON via Issues
+name: Atualizar Problemas
 on:
   issues:
-    types: [opened]  # Dispara quando uma nova Issue é criada
+    types: [opened]
 
 jobs:
-  update_json:
+  update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout do repositório
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Configurar Git
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+          
+      - name: Instalar jq
+        run: sudo apt-get install -y jq
 
-      - name: Extrair dados da Issue
-        id: extract_issue
+      - name: Processar Issue
+        id: process
         run: |
-          # Pega o título e corpo da Issue (formatados como "Novo Problema: [TÍTULO]")
-          ISSUE_TITLE="${{ github.event.issue.title }}"
-          ISSUE_BODY="${{ github.event.issue.body }}"
+          TITLE="${TITLE#Novo Problema: }"
+          DESC=$(echo "$BODY" | grep -oP '(?<=\*\*Descrição:\*\* ).*' | head -1)
+          
+          echo "title=$(echo "$TITLE" | jq -R .)" >> $GITHUB_OUTPUT
+          echo "desc=$(echo "$DESC" | jq -R .)" >> $GITHUB_OUTPUT
 
-          # Remove o prefixo "Novo Problema: " do título
-          PROBLEMA_TITULO=${ISSUE_TITLE#"Novo Problema: "}
-
-          # Extrai a descrição do corpo (formatado como "**Descrição:** [TEXTO]")
-          PROBLEMA_DESCRICAO=$(echo "$ISSUE_BODY" | sed -n 's/**Descrição:** \(.*\)/\1/p')
-
-          # Salva os dados em variáveis de saída para usar nos próximos steps
-          echo "problema_titulo=$PROBLEMA_TITULO" >> $GITHUB_OUTPUT
-          echo "problema_descricao=$PROBLEMA_DESCRICAO" >> $GITHUB_OUTPUT
-
-      - name: Atualizar problemas.json
+      - name: Atualizar JSON
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Token com permissão para push
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          # Lê o arquivo JSON atual (ou cria um array vazio se não existir)
-          if [ -f "problemas.json" ]; then
-            PROBLEMAS=$(cat problemas.json)
-          else
-            PROBLEMAS="[]"
-          fi
+          # Baixar JSON atual
+          curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/SEU_USUARIO/SEU_REPO/contents/problemas.json" > file.json
 
-          # Adiciona o novo problema ao JSON
-          NOVO_PROBLEMA=$(jq -n \
-            --arg titulo "${{ steps.extract_issue.outputs.problema_titulo }}" \
-            --arg descricao "${{ steps.extract_issue.outputs.problema_descricao }}" \
-            '{titulo: $titulo, descricao: $descricao}')
+          # Processar dados
+          CONTENT=$(jq -r '.content' file.json | base64 -d)
+          SHA=$(jq -r '.sha' file.json)
+          
+          # Atualizar array
+          UPDATED=$(echo "$CONTENT" | jq \
+            --arg t "${{ steps.process.outputs.title }}" \
+            --arg d "${{ steps.process.outputs.desc }}" \
+            '. += [{"titulo":$t,"descricao":$d,"data":(now|todate)}]')
 
-          PROBLEMAS_ATUALIZADOS=$(echo "$PROBLEMAS" | jq --argjson novo "$NOVO_PROBLEMA" '. + [$novo]')
-
-          # Salva o JSON atualizado
-          echo "$PROBLEMAS_ATUALIZADOS" > problemas.json
-
-          # Faz commit e push das mudanças
+          # Commitar mudanças
+          echo "$UPDATED" > problemas.json
           git add problemas.json
-          git commit -m "Adiciona problema: ${{ steps.extract_issue.outputs.problema_titulo }}"
+          git commit -m "Adicionar problema: ${{ steps.process.outputs.title }}"
           git push
