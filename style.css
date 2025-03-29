@@ -1,35 +1,158 @@
+/* Estilos Gerais */
+:root {
+  --cor-primaria: #2563eb;
+  --cor-secundaria: #1e40af;
+  --cor-texto: #1f2937;
+  --cor-fundo: #f9fafb;
+  --cor-borda: #e5e7eb;
+  --cor-sucesso: #10b981;
+  --cor-erro: #ef4444;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  line-height: 1.6;
+  padding: 20px;
+  min-height: 100vh;
 }
 
+/* Container Principal */
 .container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 30px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-input, textarea, button {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+h1, h2 {
+  color: var(--cor-primaria);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--cor-borda);
 }
 
+/* Formulários */
+input, textarea, select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border 0.3s;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Botões */
 button {
-    background: #0070f3;
-    color: white;
-    cursor: pointer;
-    border: none;
+  background-color: var(--cor-primaria);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.3s;
+  width: 100%;
 }
 
 button:hover {
-    background: #0061d6;
+  background-color: var(--cor-secundaria);
 }
 
+/* Links */
 a {
-    color: #0070f3;
-    text-align: center;
-    text-decoration: none;
+  color: var(--cor-primaria);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-block;
+  margin-top: 15px;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Mensagens de Status */
+#status {
+  padding: 12px;
+  border-radius: 6px;
+  margin: 15px 0;
+  display: none;
+}
+
+.success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--cor-sucesso);
+  border: 1px solid var(--cor-sucesso);
+}
+
+.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--cor-erro);
+  border: 1px solid var(--cor-erro);
+}
+
+/* Lista de Problemas */
+.problema-item {
+  background: white;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.problema-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.problema-titulo {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--cor-primaria);
+}
+
+.problema-descricao {
+  color: var(--cor-texto);
+  margin-bottom: 10px;
+}
+
+.problema-data {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  
+  body {
+    padding: 10px;
+  }
 }
