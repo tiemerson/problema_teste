@@ -5,41 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes do Problema</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .detail-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .detail-container h2 {
-            color: #2c3e50;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        .meta-info {
-            color: #7f8c8d;
-            font-size: 0.9em;
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
-        <div class="detail-container" id="detalhe-problema">
-            <p>Carregando detalhes...</p>
-        </div>
-        <a href="problema.html">Voltar para a lista</a>
+        <div id="detalhe-problema" class="detalhe-container"></div>
+        <a href="problema.html">Voltar para lista</a>
     </div>
 
     <script>
         async function carregarDetalhes() {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get("id");
+            const id = new URLSearchParams(window.location.search).get("id");
             
             try {
                 const response = await fetch(
-                    "https://raw.githubusercontent.com/tiemerson/problema_teste/main/problemas.json"
+                    'https://raw.githubusercontent.com/tiemerson/problema_teste/main/problemas.json'
                 );
                 const problemas = await response.json();
                 
@@ -47,19 +26,15 @@
                     const prob = problemas[id];
                     document.getElementById("detalhe-problema").innerHTML = `
                         <h2>${prob.titulo}</h2>
-                        <p>${prob.descricao}</p>
-                        <div class="meta-info">
+                        <p class="descricao">${prob.descricao}</p>
+                        <div class="meta">
                             Cadastrado em: ${new Date(prob.data).toLocaleString()}
                         </div>
                     `;
-                } else {
-                    document.getElementById("detalhe-problema").innerHTML = 
-                        "<p>Problema não encontrado.</p>";
                 }
             } catch (error) {
                 document.getElementById("detalhe-problema").innerHTML = 
-                    "<p class='error'>Erro ao carregar detalhes.</p>";
-                console.error(error);
+                    "<p class='error'>Erro ao carregar detalhes</p>";
             }
         }
 
