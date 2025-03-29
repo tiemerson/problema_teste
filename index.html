@@ -14,8 +14,41 @@
         .success { background: #e6ffed; color: #22863a; }
         .error { background: #ffebee; color: #cc0000; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js"></script>
 </head>
 <body>
+    <script>
+    // Configuração do Firebase
+        const firebaseConfig = {
+          apiKey: "SUA_CHAVE_AQUI",
+          authDomain: "APP.firebaseapp.com",
+          databaseURL: "https://APP.firebaseio.com",
+          projectId: "APP",
+          storageBucket: "APP.appspot.com",
+          messagingSenderId: "123456789",
+          appId: "1:123456789:web:abcdef123456"
+        };
+    
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+    
+        async function cadastrarProblema() {
+          const titulo = document.getElementById("titulo").value;
+          const descricao = document.getElementById("descricao").value;
+          
+          // Gravação direta no Firebase
+          firebase.database().ref('problemas/').push({
+            titulo: titulo,
+            descricao: descricao,
+            data: new Date().toISOString()
+          }).then(() => {
+            alert("Problema cadastrado com sucesso!");
+            window.location.href = "problema.html";
+          });
+        }
+  </script>
     <div class="container">
         <h1>Cadastrar Problema</h1>
         <input type="text" id="titulo" placeholder="Título" required>
