@@ -25,13 +25,13 @@
         <h1>Cadastrar Problema</h1>
         <input type="text" id="titulo" placeholder="Título" required>
         <textarea id="descricao" placeholder="Descrição" required></textarea>
-        <button onclick="cadastrarProblema()">Enviar</button>
+        <button id="btnCadastrar">Enviar</button>
         <div id="status"></div>
         <a href="problema.html">Ver Problemas</a>
     </div>
 
     <script>
-        // Sua configuração do Firebase
+        // Configuração do Firebase (SEUS DADOS REAIS)
         const firebaseConfig = {
             apiKey: "AIzaSyCXjpSkFfCQlvOH7jeAFYs1us4374BN3sw",
             authDomain: "problemateste-e4bb3.firebaseapp.com",
@@ -42,9 +42,14 @@
             appId: "1:150575482534:web:b54d509bc455604194d667"
         };
 
-        // Inicialize o Firebase
+        // Inicialização do Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+
+        // Espera o DOM carregar antes de atribuir eventos
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btnCadastrar').addEventListener('click', cadastrarProblema);
+        });
 
         function cadastrarProblema() {
             const titulo = document.getElementById("titulo").value.trim();
@@ -62,7 +67,7 @@
             status.className = "";
             status.style.display = "block";
 
-            // Cadastra no Firebase
+            // Cadastra no Firebase (agora usando a variável corretamente inicializada)
             database.ref('problemas/').push({
                 titulo: titulo,
                 descricao: descricao,
@@ -76,6 +81,7 @@
             .catch((error) => {
                 status.textContent = "Erro: " + error.message;
                 status.className = "error";
+                console.error("Erro detalhado:", error);
             });
         }
     </script>
