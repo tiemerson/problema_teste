@@ -7,14 +7,16 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Cadastro de Problema</h1>
-    
-    <input type="text" id="problema" placeholder="Nome do Problema"><br>
-    <textarea id="descricao" placeholder="Descrição do Problema"></textarea><br>
-    <button onclick="cadastrarProblema()">Cadastrar Problema</button>
-    
-    <br><br>
-    <a href="problema.html">Ver Problemas Cadastrados</a>
+    <div class="container">
+        <h1>Cadastro de Problema</h1>
+        
+        <input type="text" id="problema" class="input-field" placeholder="Nome do Problema"><br>
+        <textarea id="descricao" class="input-field" placeholder="Descrição do Problema"></textarea><br>
+        <button class="btn" onclick="cadastrarProblema()">Cadastrar Problema</button>
+        
+        <br><br>
+        <a href="problema.html" class="link">Ver Problemas Cadastrados</a>
+    </div>
 
     <script>
         async function cadastrarProblema() {
@@ -26,16 +28,10 @@
                 return;
             }
 
-            // Formata os dados para a Issue (sem usar token no front-end!)
-            const issueTitle = `Novo Problema: ${problema}`;
-            const issueBody = `**Descrição:** ${descricao}`;
-
-            // Link para o usuário criar a Issue manualmente (solução segura)
-            const issueUrl = `https://github.com/tiemerson/problema_teste/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
-            
-            // Abre uma nova aba para o usuário confirmar a criação da Issue
+            // Abre uma nova aba para criar a Issue no GitHub (sem token!)
+            const issueUrl = `https://github.com/tiemerson/problema_teste/issues/new?title=Novo Problema: ${encodeURIComponent(problema)}&body=**Descrição:** ${encodeURIComponent(descricao)}`;
             window.open(issueUrl, "_blank");
-            alert("Clique em 'Submit new issue' na página que abriu para finalizar o cadastro!");
+            alert("Clique em 'Submit new issue' na página que abriu para finalizar!");
         }
     </script>
 </body>
