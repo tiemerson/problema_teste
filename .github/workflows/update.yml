@@ -32,7 +32,7 @@ jobs:
         run: |
           # Baixar JSON atual
           curl -s -H "Authorization: token $GH_TOKEN" \
-            "https://api.github.com/repos/SEU_USUARIO/SEU_REPO/contents/problemas.json" > file.json
+            "https://api.github.com/repos/tiemerson/problema_teste/contents/problemas.json" > file.json
 
           # Processar dados
           CONTENT=$(jq -r '.content' file.json | base64 -d)
