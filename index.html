@@ -5,15 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Problemas</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        #status {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Cadastrar Problema</h1>
-        <input type="text" id="titulo" placeholder="Título" required>
+        <input type="text" id="titulo" placeholder="Título do problema" required>
         <textarea id="descricao" placeholder="Descrição detalhada" required></textarea>
         <button onclick="cadastrarProblema()">Enviar</button>
         <div id="status"></div>
-        <a href="problema.html">Ver Problemas</a>
+        <a href="problema.html">Ver problemas cadastrados</a>
     </div>
 
     <script>
@@ -29,18 +47,38 @@
                 return;
             }
 
-            status.textContent = "Redirecionando para GitHub...";
+            status.textContent = "Enviando problema...";
+            status.className = "";
             status.style.display = "block";
 
-            // Abre o GitHub para cadastro manual (sem token no frontend)
-            const url = `https://github.com/tiemerson/problema_teste/issues/new?` +
-                       `title=Problema: ${encodeURIComponent(titulo)}&` +
-                       `body=**Descrição:** ${encodeURIComponent(descricao)}%0A%0A**Data:** ${new Date().toLocaleString()}`;
-            
-            window.open(url, '_blank');
-            
-            status.textContent = "Complete o cadastro na página do GitHub!";
-            status.className = "success";
+            try {
+                const response = await fetch('https://api.github.com/repos/SEU_USUARIO/SEU_REPOSITORIO/dispatches', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'token ghp_SEU_TOKEN_AQUI',
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        event_type: 'cadastro_problema',
+                        client_payload: {
+                            titulo: titulo,
+                            descricao: descricao
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    status.textContent = "Problema enviado! Atualize a página em alguns segundos.";
+                    status.className = "success";
+                } else {
+                    throw new Error(await response.text());
+                }
+            } catch (error) {
+                status.textContent = "Erro: " + error.message;
+                status.className = "error";
+                console.error("Erro no cadastro:", error);
+            }
         }
     </script>
 </body>
