@@ -5,30 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Problemas</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        #status {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-    </style>
 </head>
 <body>
     <div class="container">
         <h1>Cadastrar Problema</h1>
-        <input type="text" id="problema" placeholder="Título do problema" required>
+        <input type="text" id="titulo" placeholder="Título" required>
         <textarea id="descricao" placeholder="Descrição detalhada" required></textarea>
         <button onclick="cadastrarProblema()">Enviar</button>
         <div id="status"></div>
-        <a href="problema.html">Ver problemas cadastrados</a>
+        <a href="problema.html">Ver Problemas</a>
     </div>
 
     <script>
-        function cadastrarProblema() {
-            const titulo = document.getElementById("problema").value.trim();
+        async function cadastrarProblema() {
+            const titulo = document.getElementById("titulo").value.trim();
             const descricao = document.getElementById("descricao").value.trim();
             const status = document.getElementById("status");
 
@@ -39,23 +29,18 @@
                 return;
             }
 
-            // Direciona para criação manual de issue no GitHub
-            const url = `https://github.com/tiemerson/problema_teste/issues/new?` +
+            status.textContent = "Redirecionando para GitHub...";
+            status.style.display = "block";
+
+            // Abre o GitHub para cadastro manual (sem token no frontend)
+            const url = `https://github.com/SEU_USUARIO/SEU_REPOSITORIO/issues/new?` +
                        `title=Problema: ${encodeURIComponent(titulo)}&` +
                        `body=**Descrição:** ${encodeURIComponent(descricao)}%0A%0A**Data:** ${new Date().toLocaleString()}`;
             
             window.open(url, '_blank');
             
-            status.textContent = "Complete o cadastro na página do GitHub que abriu!";
+            status.textContent = "Complete o cadastro na página do GitHub!";
             status.className = "success";
-            status.style.display = "block";
-            
-            // Limpa os campos após 3 segundos
-            setTimeout(() => {
-                document.getElementById("problema").value = "";
-                document.getElementById("descricao").value = "";
-                status.style.display = "none";
-            }, 3000);
         }
     </script>
 </body>
