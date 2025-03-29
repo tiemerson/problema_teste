@@ -1,22 +1,31 @@
-name: Processar Cadastro
+name: Atualizar Base de Problemas
 on:
-  repository_dispatch:
-    types: [cadastro_problema]
+  issues:
+    types: [opened]
 
 jobs:
-  processar-cadastro:
+  processar-problema:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout do repositório
+      - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Configurar Git
+      - name: Configurar ambiente
         run: |
+          sudo apt-get install -y jq
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-      - name: Instalar jq
-        run: sudo apt-get install -y jq
+      - name: Obter dados da issue
+        id: extrair-dados
+        run: |
+          TITULO=$(echo '${{ github.event.issue.title }}' | sed 's/^Problema: //')
+          DESCRICAO=$(echo '${{ github.event.issue.body }}' | grep -oP '(?<=\*\*Descrição:\*\* ).*' | head -1)
+          DATA="${{ github.event.issue.created_at }}"
+          
+          echo "titulo=$(echo $TITULO | jq -R .)" >> $GITHUB_OUTPUT
+          echo "descricao=$(echo $DESCRICAO | jq -R .)" >> $GITHUB_OUTPUT
+          echo "data=$DATA" >> $GITHUB_OUTPUT
 
       - name: Atualizar arquivo JSON
         env:
@@ -26,19 +35,22 @@ jobs:
           curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/tiemerson/problema_teste/contents/problemas.json" > file.json
 
-          # Decodificar e atualizar
-          content=$(jq -r '.content' file.json | base64 -d)
-          sha=$(jq -r '.sha' file.json)
+          # Processar dados
+          SHA=$(jq -r '.sha' file.json)
+          CONTEUDO=$(jq -r '.content' file.json | base64 -d)
           
-          novo_problema=$(jq -n \
-            --arg t "${{ github.event.client_payload.titulo }}" \
-            --arg d "${{ github.event.client_payload.descricao }}" \
-            '{titulo:$t, descricao:$d, data:(now|todate)}')
+          # Criar novo objeto
+          NOVO_PROBLEMA=$(jq -n \
+            --arg t "${{ steps.extrair-dados.outputs.titulo }}" \
+            --arg d "${{ steps.extrair-dados.outputs.descricao }}" \
+            --arg dt "${{ steps.extrair-dados.outputs.data }}" \
+            '{titulo:$t, descricao:$d, data:$dt}')
 
-          updated=$(echo "$content" | jq --argjson novo "$novo_problema" '. += [$novo]')
+          # Atualizar array
+          NOVO_CONTEUDO=$(echo "$CONTEUDO" | jq --argjson novo "$NOVO_PROBLEMA" '. += [$novo]')
 
-          # Fazer commit
-          echo "$updated" > problemas.json
+          # Commitar alterações
+          echo "$NOVO_CONTEUDO" > problemas.json
           git add problemas.json
-          git commit -m "Cadastro automático: ${{ github.event.client_payload.titulo }}"
+          git commit -m "Adicionar problema: ${{ steps.extrair-dados.outputs.titulo }}"
           git push
