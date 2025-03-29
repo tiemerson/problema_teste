@@ -4,12 +4,11 @@ on:
     types: [opened]
 
 jobs:
-  atualizar-problemas:
+  update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-        
+      - uses: actions/checkout@v4
+      
       - name: Configurar Git
         run: |
           git config --global user.name "GitHub Actions"
@@ -18,8 +17,8 @@ jobs:
       - name: Instalar jq
         run: sudo apt-get install -y jq
 
-      - name: Extrair dados da issue
-        id: extrair-dados
+      - name: Extrair dados
+        id: extrair
         run: |
           echo "titulo=$(echo '${{ github.event.issue.title }}' | sed 's/^Problema: //' | jq -R .)" >> $GITHUB_OUTPUT
           echo "descricao=$(echo '${{ github.event.issue.body }}' | grep -oP '(?<=\*\*Descrição:\*\* ).*' | head -1 | jq -R .)" >> $GITHUB_OUTPUT
@@ -28,22 +27,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          # Baixar problemas.json atual
           curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/tiemerson/problema_teste/contents/problemas.json" > file.json
-
-          # Processar dados
-          content=$(jq -r '.content' file.json | base64 -d)
-          sha=$(jq -r '.sha' file.json)
           
-          # Adicionar novo problema
+          content=$(jq -r '.content' file.json | base64 -d)
           updated=$(echo "$content" | jq \
-            --arg t "${{ steps.extrair-dados.outputs.titulo }}" \
-            --arg d "${{ steps.extrair-dados.outputs.descricao }}" \
+            --arg t "${{ steps.extrair.outputs.titulo }}" \
+            --arg d "${{ steps.extrair.outputs.descricao }}" \
             '. += [{"titulo":$t,"descricao":$d,"data":(now|todate)}]')
-
-          # Commitar mudanças
+          
           echo "$updated" > problemas.json
           git add problemas.json
-          git commit -m "Adicionar problema: ${{ steps.extrair-dados.outputs.titulo }}"
+          git commit -m "Add: ${{ steps.extrair.outputs.titulo }}"
           git push
