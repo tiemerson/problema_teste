@@ -3,63 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Problemas Reportados</title>
+    <title>Problemas Cadastrados</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Problemas Cadastrados</h1>
-        <input type="text" id="busca" placeholder="Buscar problemas..." oninput="filtrarProblemas()">
-        <div id="lista-problemas" class="lista-problemas"></div>
-        <a href="index.html">Reportar Novo Problema</a>
+        <h1>Problemas Reportados</h1>
+        <div id="lista-problemas" class="lista-problemas">
+            <!-- Os problemas serão carregados aqui via JavaScript -->
+        </div>
+        <a href="index.html">Cadastrar Novo Problema</a>
     </div>
 
     <script>
-        firebase.database().ref('problemas/').on('value', (snapshot) => {
-          const problemas = snapshot.val();
+        // Configuração do Firebase (igual ao index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXjpSkFfCQlvOH7jeAFYs1us4374BN3sw",
+            authDomain: "problemateste-e4bb3.firebaseapp.com",
+            databaseURL: "https://problemateste-e4bb3-default-rtdb.firebaseio.com",
+            projectId: "problemateste-e4bb3",
+            storageBucket: "problemateste-e4bb3.firebasestorage.app",
+            messagingSenderId: "150575482534",
+            appId: "1:150575482534:web:b54d509bc455604194d667"
+        };
 
-        
-        async function carregarProblemas() {
-            try {
-                const response = await fetch(
-                    'https://raw.githubusercontent.com/tiemerson/problema_teste/main/problemas.json?t=' + Date.now()
-                );
-                const problemas = await response.json();
-                
-                let html = "";
-                problemas.forEach((prob, index) => {
-                    html += `
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Monitora mudanças em tempo real
+        database.ref('problemas/').on('value', (snapshot) => {
+            const problemas = snapshot.val();
+            const lista = document.getElementById('lista-problemas');
+            lista.innerHTML = '';
+
+            if (problemas) {
+                Object.keys(problemas).forEach((key) => {
+                    const problema = problemas[key];
+                    lista.innerHTML += `
                         <div class="problema-item">
-                            <a href="problem_detail.html?id=${index}">
-                                <h3>${prob.titulo}</h3>
-                                <p>${prob.descricao.substring(0, 100)}...</p>
-                                <small>${new Date(prob.data).toLocaleDateString()}</small>
-                            </a>
+                            <h3>${problema.titulo}</h3>
+                            <p>${problema.descricao}</p>
+                            <small>${new Date(problema.data).toLocaleString()}</small>
                         </div>
                     `;
                 });
-                
-                document.getElementById("lista-problemas").innerHTML = html || 
-                    "<p class='no-results'>Nenhum problema encontrado</p>";
-                    
-            } catch (error) {
-                console.error("Erro:", error);
-                document.getElementById("lista-problemas").innerHTML = 
-                    "<p class='error'>Erro ao carregar. Tente recarregar a página.</p>";
+            } else {
+                lista.innerHTML = "<p>Nenhum problema cadastrado ainda.</p>";
             }
-        }
-
-        function filtrarProblemas() {
-            const termo = document.getElementById("busca").value.toLowerCase();
-            const itens = document.querySelectorAll(".problema-item");
-            
-            itens.forEach(item => {
-                const texto = item.textContent.toLowerCase();
-                item.style.display = texto.includes(termo) ? "block" : "none";
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", carregarProblemas);
+        });
     </script>
 </body>
 </html>
