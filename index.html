@@ -5,33 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Problema</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos adicionais para melhorar a experiência */
+        .loading {
+            display: none;
+            color: blue;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Cadastro de Problema</h1>
         
-        <input type="text" id="problema" class="input-field" placeholder="Nome do Problema"><br>
-        <textarea id="descricao" class="input-field" placeholder="Descrição do Problema"></textarea><br>
-        <button class="btn" onclick="cadastrarProblema()">Cadastrar Problema</button>
+        <input type="text" id="problema" placeholder="Nome do Problema" required><br>
+        <textarea id="descricao" placeholder="Descrição do Problema" required></textarea><br>
+        
+        <button onclick="cadastrarProblema()">Cadastrar Problema</button>
+        <p id="status" class="loading"></p>
         
         <br><br>
-        <a href="problema.html" class="link">Ver Problemas Cadastrados</a>
+        <a href="problema.html">Ver Problemas Cadastrados</a>
     </div>
 
     <script>
         async function cadastrarProblema() {
-            const problema = document.getElementById("problema").value;
-            const descricao = document.getElementById("descricao").value;
+            const problema = document.getElementById("problema").value.trim();
+            const descricao = document.getElementById("descricao").value.trim();
+            const statusElement = document.getElementById("status");
 
+            // Validação dos campos
             if (!problema || !descricao) {
-                alert("Preencha todos os campos!");
+                statusElement.textContent = "Preencha todos os campos!";
+                statusElement.className = "error";
                 return;
             }
 
-            // Abre uma nova aba para criar a Issue no GitHub (sem token!)
-            const issueUrl = `https://github.com/tiemerson/problema_teste/issues/new?title=Novo Problema: ${encodeURIComponent(problema)}&body=**Descrição:** ${encodeURIComponent(descricao)}`;
-            window.open(issueUrl, "_blank");
-            alert("Clique em 'Submit new issue' na página que abriu para finalizar!");
+            try {
+                statusElement.textContent = "Redirecionando para o GitHub...";
+                statusElement.className = "";
+                statusElement.style.display = "block";
+
+                // Prepara os dados para a Issue
+                const issueTitle = `Novo Problema: ${problema}`;
+                const issueBody = `**Descrição:** ${descricao}\n\n` +
+                                 `**Data:** ${new Date().toLocaleString()}`;
+
+                // Codifica os parâmetros para URL
+                const encodedTitle = encodeURIComponent(issueTitle);
+                const encodedBody = encodeURIComponent(issueBody);
+
+                // Cria a URL para nova Issue
+                const repoUrl = "https://github.com/tiemerson/problema_teste";
+                const issueUrl = `${repoUrl}/issues/new?title=${encodedTitle}&body=${encodedBody}`;
+
+                // Abre em nova aba
+                window.open(issueUrl, "_blank");
+                
+                // Feedback para o usuário
+                statusElement.textContent = "Complete o cadastro no GitHub!";
+                
+                // Limpa os campos após 2 segundos
+                setTimeout(() => {
+                    document.getElementById("problema").value = "";
+                    document.getElementById("descricao").value = "";
+                    statusElement.style.display = "none";
+                }, 3000);
+
+            } catch (error) {
+                statusElement.textContent = `Erro: ${error.message}`;
+                statusElement.className = "error";
+                console.error("Erro no cadastro:", error);
+            }
         }
     </script>
 </body>
