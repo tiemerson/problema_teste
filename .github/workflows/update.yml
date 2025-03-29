@@ -1,42 +1,44 @@
-name: Atualizar Problemas
+name: Processar Cadastro
 on:
-  issues:
-    types: [opened]
+  repository_dispatch:
+    types: [cadastro_problema]
 
 jobs:
-  update:
+  processar-cadastro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
       - name: Configurar Git
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          
+
       - name: Instalar jq
         run: sudo apt-get install -y jq
 
-      - name: Extrair dados
-        id: extrair
-        run: |
-          echo "titulo=$(echo '${{ github.event.issue.title }}' | sed 's/^Problema: //' | jq -R .)" >> $GITHUB_OUTPUT
-          echo "descricao=$(echo '${{ github.event.issue.body }}' | grep -oP '(?<=\*\*Descrição:\*\* ).*' | head -1 | jq -R .)" >> $GITHUB_OUTPUT
-
-      - name: Atualizar JSON
+      - name: Atualizar arquivo JSON
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
+          # Baixar problemas.json atual
           curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/tiemerson/problema_teste/contents/problemas.json" > file.json
-          
+
+          # Decodificar e atualizar
           content=$(jq -r '.content' file.json | base64 -d)
-          updated=$(echo "$content" | jq \
-            --arg t "${{ steps.extrair.outputs.titulo }}" \
-            --arg d "${{ steps.extrair.outputs.descricao }}" \
-            '. += [{"titulo":$t,"descricao":$d,"data":(now|todate)}]')
+          sha=$(jq -r '.sha' file.json)
           
+          novo_problema=$(jq -n \
+            --arg t "${{ github.event.client_payload.titulo }}" \
+            --arg d "${{ github.event.client_payload.descricao }}" \
+            '{titulo:$t, descricao:$d, data:(now|todate)}')
+
+          updated=$(echo "$content" | jq --argjson novo "$novo_problema" '. += [$novo]')
+
+          # Fazer commit
           echo "$updated" > problemas.json
           git add problemas.json
-          git commit -m "Add: ${{ steps.extrair.outputs.titulo }}"
+          git commit -m "Cadastro automático: ${{ github.event.client_payload.titulo }}"
           git push
