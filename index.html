@@ -3,82 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Problema</title>
+    <title>Cadastro Automático</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Estilos adicionais para melhorar a experiência */
-        .loading {
-            display: none;
-            color: blue;
+        #status {
+            margin: 10px 0;
             font-weight: bold;
+            display: none;
         }
-        .error {
-            color: red;
-        }
+        .success { color: green; }
+        .error { color: red; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Cadastro de Problema</h1>
-        
-        <input type="text" id="problema" placeholder="Nome do Problema" required><br>
-        <textarea id="descricao" placeholder="Descrição do Problema" required></textarea><br>
-        
-        <button onclick="cadastrarProblema()">Cadastrar Problema</button>
-        <p id="status" class="loading"></p>
-        
-        <br><br>
-        <a href="description.html">Ver Problemas Cadastrados</a>
+        <h1>Cadastrar Problema</h1>
+        <input type="text" id="problema" placeholder="Título" required>
+        <textarea id="descricao" placeholder="Descrição" required></textarea>
+        <button onclick="cadastrarProblema()">Enviar</button>
+        <div id="status"></div>
+        <a href="problema.html">Ver Problemas</a>
     </div>
 
     <script>
         async function cadastrarProblema() {
             const problema = document.getElementById("problema").value.trim();
             const descricao = document.getElementById("descricao").value.trim();
-            const statusElement = document.getElementById("status");
+            const status = document.getElementById("status");
 
-            // Validação dos campos
+            // Validação
             if (!problema || !descricao) {
-                statusElement.textContent = "Preencha todos os campos!";
-                statusElement.className = "error";
+                status.textContent = "Preencha todos os campos!";
+                status.className = "error";
+                status.style.display = "block";
                 return;
             }
 
+            status.textContent = "Enviando...";
+            status.className = "";
+            status.style.display = "block";
+
             try {
-                statusElement.textContent = "Redirecionando para o GitHub...";
-                statusElement.className = "";
-                statusElement.style.display = "block";
+                const response = await fetch("https://sua-api.vercel.app/api/problema", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ problema, descricao })
+                });
 
-                // Prepara os dados para a Issue
-                const issueTitle = `Novo Problema: ${problema}`;
-                const issueBody = `**Descrição:** ${descricao}\n\n` +
-                                 `**Data:** ${new Date().toLocaleString()}`;
-
-                // Codifica os parâmetros para URL
-                const encodedTitle = encodeURIComponent(issueTitle);
-                const encodedBody = encodeURIComponent(issueBody);
-
-                // Cria a URL para nova Issue
-                const repoUrl = "https://github.com/tiemerson/problema_teste";
-                const issueUrl = `${repoUrl}/issues/new?title=${encodedTitle}&body=${encodedBody}`;
-
-                // Abre em nova aba
-                window.open(issueUrl, "_blank");
+                const result = await response.json();
                 
-                // Feedback para o usuário
-                statusElement.textContent = "Complete o cadastro no GitHub!";
-                
-                // Limpa os campos após 2 segundos
-                setTimeout(() => {
-                    document.getElementById("problema").value = "";
-                    document.getElementById("descricao").value = "";
-                    statusElement.style.display = "none";
-                }, 3000);
-
+                if (result.success) {
+                    status.textContent = "Cadastrado com sucesso!";
+                    status.className = "success";
+                    setTimeout(() => window.location.href = "problema.html", 1500);
+                } else {
+                    throw new Error(result.error);
+                }
             } catch (error) {
-                statusElement.textContent = `Erro: ${error.message}`;
-                statusElement.className = "error";
-                console.error("Erro no cadastro:", error);
+                status.textContent = `Erro: ${error.message}`;
+                status.className = "error";
+                console.error("Erro:", error);
             }
         }
     </script>
