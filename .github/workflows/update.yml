@@ -1,7 +1,7 @@
-# .github/workflows/update-problems.yml
-name: Update Problems JSON
+name: Update Problems JSON via Issues
 on:
-  workflow_dispatch:  # Permite rodar manualmente
+  issues:
+    types: [opened]  # Dispara quando uma nova Issue é criada
 
 jobs:
   update_json:
@@ -10,15 +10,51 @@ jobs:
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      - name: Atualizar JSON
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Token seguro!
+      - name: Configurar Git
         run: |
-          # Aqui vai seu script para modificar problemas.json
-          echo '{"titulo":"Teste","descricao":"Feito via Actions"}' > problemas.json
-          
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+
+      - name: Extrair dados da Issue
+        id: extract_issue
+        run: |
+          # Pega o título e corpo da Issue (formatados como "Novo Problema: [TÍTULO]")
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          ISSUE_BODY="${{ github.event.issue.body }}"
+
+          # Remove o prefixo "Novo Problema: " do título
+          PROBLEMA_TITULO=${ISSUE_TITLE#"Novo Problema: "}
+
+          # Extrai a descrição do corpo (formatado como "**Descrição:** [TEXTO]")
+          PROBLEMA_DESCRICAO=$(echo "$ISSUE_BODY" | sed -n 's/**Descrição:** \(.*\)/\1/p')
+
+          # Salva os dados em variáveis de saída para usar nos próximos steps
+          echo "problema_titulo=$PROBLEMA_TITULO" >> $GITHUB_OUTPUT
+          echo "problema_descricao=$PROBLEMA_DESCRICAO" >> $GITHUB_OUTPUT
+
+      - name: Atualizar problemas.json
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Token com permissão para push
+        run: |
+          # Lê o arquivo JSON atual (ou cria um array vazio se não existir)
+          if [ -f "problemas.json" ]; then
+            PROBLEMAS=$(cat problemas.json)
+          else
+            PROBLEMAS="[]"
+          fi
+
+          # Adiciona o novo problema ao JSON
+          NOVO_PROBLEMA=$(jq -n \
+            --arg titulo "${{ steps.extract_issue.outputs.problema_titulo }}" \
+            --arg descricao "${{ steps.extract_issue.outputs.problema_descricao }}" \
+            '{titulo: $titulo, descricao: $descricao}')
+
+          PROBLEMAS_ATUALIZADOS=$(echo "$PROBLEMAS" | jq --argjson novo "$NOVO_PROBLEMA" '. + [$novo]')
+
+          # Salva o JSON atualizado
+          echo "$PROBLEMAS_ATUALIZADOS" > problemas.json
+
+          # Faz commit e push das mudanças
           git add problemas.json
-          git commit -m "Atualizado via Actions"
+          git commit -m "Adiciona problema: ${{ steps.extract_issue.outputs.problema_titulo }}"
           git push
