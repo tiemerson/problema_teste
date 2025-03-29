@@ -180,7 +180,7 @@
             try {
                 // Carrega problemas do GitHub
                 const response = await fetch(
-                    'https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/problemas.json?t=' + Date.now()
+                    'https://raw.githubusercontent.com/tiemerson/problema_teste/main/problemas.json?t=' + Date.now()
                 );
                 const problems = await response.json();
                 
